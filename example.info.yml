@@ -1,8 +1,4 @@
-name: Example
-description: Example with a form!
+name: 'Example'
+description: 'Form'
 core: 8.x
-package: Custome
-dependencies:
-- node
-
 type: module
