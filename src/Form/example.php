@@ -8,6 +8,41 @@ use Drupal\Core\Routing\RouteMatchInterface;
 
 class example extends FormBase
 {
+    public function contact($email_form, $fn_form, $ln_form){
+        $arr = array(
+            'properties' => array(
+                array(
+                    'property' => 'email',
+                    'value' => $email_form
+                ),
+                array(
+                    'property' => 'firstname',
+                    'value' => $fn_form
+                ),
+                array(
+                    'property' => 'lastname',
+                    'value' => $ln_form
+                )
+        )
+        );
+        $post_json = json_encode($arr);    //сама строка запроса
+        $hapikey = '5324fadc-d0f8-43e4-abe7-ac5c241d8b5c';
+        $endpoint = 'https://api.hubapi.com/contacts/v1/contact/?hapikey=' . $hapikey;
+        $ch=@curl_init();
+        @curl_setopt($ch, CURLOPT_POST, true);
+        @curl_setopt($ch, CURLOPT_POSTFIELDS, $post_json); //Строка, содержащая данные для HTTP POST запроса
+        @curl_setopt($ch, CURLOPT_URL, $endpoint);
+        @curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json')); //Массив с HTTP заголовками
+        @curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $response = @curl_exec($ch);
+        $status_code = @curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_errors = curl_error($ch);
+        @curl_close($ch);
+
+        /*if ($status_code==0) */ \Drupal::logger('example')->error("1. $response "."2. $status_code "."3. $curl_errors"." $endpoint");
+    }
+
     public function buildForm(array $form, FormStateInterface $form_state)
     {
         $form['first_name'] = array(            //FIRST NAME
@@ -62,14 +97,15 @@ class example extends FormBase
 
     public function submitForm(array &$form, FormStateInterface $form_state)
     {
-        $to=$form_state->getValue('email');
-      if (simple_mail_send('', $to, $form_state->getValue('subject'), $form_state->getValue('message'))==true)    
+        $adress=$form_state->getValue('email');
+        if (simple_mail_send('alina.zhulanava@gmail.com', $adress, $form_state->getValue('subject'), $form_state->getValue('message'))==true)
        {
-             drupal_set_message($this->t('Thank you, @first_name, your message will be sent', array(
-            '@first_name' => $form_state->getValue('first_name'))));
+             drupal_set_message($this->t('Thank you, your message will be sent'));
 
-            \Drupal::logger('example')->notice('Message to @email was sent sucsessful!', array(
-            '@email' => $form_state->getValue('email')));  
+            \Drupal::logger('example')->notice('Message was sent sucsessful: @email', array(
+            '@email' => $form_state->getValue('email')));
+           $this->contact($adress, $form_state->getValue('first_name'), $form_state->getValue('last_name'));
        }
     }
+
 }
